@@ -1,0 +1,41 @@
+<% provide(:title, '拠点一覧') %>
+<% provide(:button_text, '拠点追加') %>
+<h1>拠点一覧</h1>
+
+<div class="row">
+  <% unless @bases.empty? %>
+    <table class = "table-bordered table-striped table-condensed">
+      <tr style="background-color:#FFFFFF;">
+        <th></th>
+        <th></th>
+        <th>拠点番号</th>
+        <th>拠点名</th>
+        <th>勤怠種類</th>
+      </tr>
+      <% @bases.each do |base| %>
+        <tr style="background-color:#F9F9F9;">
+          <td><%= link_to "修正", edit_basis_path(base.id), class: "btn btn-primary", :style=>"float:left; width:100px;" %></td>
+          <td><%= link_to "削除", base, method: :delete, data: { confirm: "削除してよろしいですか？" }, class: "btn btn-primary" %></td>
+          <td style="vertical-align: top;"><%= base.baseNo %></td>
+          <td style="vertical-align: top;"><%= base.baseName %></td>
+          <td style="vertical-align: top;"><%= base.attendanceKind %></td>
+        </tr>
+      <% end %>
+    </table>
+  <% end %>
+</div>
+
+<div class="row" style="margin-top: 25px; height: 100px; background-color: #F9F9F9;">
+  <%= link_to "#baseAdd", :data => {:toggle=>"collapse"}, :class=>"btn btn-primary",
+    :style=>"transform: translateX(15px) translateY(25px); height: 50px; width: 125px;padding: 15px;" do %>拠点情報追加<% end %>
+</div>
+<div class="collapse" id="baseAdd" style="width:500px; margin:auto;">
+  <div class="card card-body">
+    <%= form_with url: bases_path(params: {baseNo: getNextBaseNo(@bases)}), method: :post, local: true do |f| %>
+      <div class="baseAdd"><%= f.label "拠点番号", class: 'baseNo' %><%= getNextBaseNo(@bases) %></div>
+      <div class="baseAdd"><%= f.label "拠点名", class: 'baseName' %><%= f.text_field :baseName, class: 'form-control', :style=>"width:300px;" %></div>
+      <div class="baseAdd"><%= f.label "勤怠種類", class: 'attendanceKind' %><%= f.select :attendanceKind, ["","出勤","退勤"] %></div>
+      <div class="addBottun"><%= f.submit yield(:button_text), class: "btn btn-primary", :style=>"width:500px;" %></div>
+    <% end %>
+  </div>
+</div>

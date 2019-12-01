@@ -1,18 +1,42 @@
 <% provide(:title, '一覧') %>
+
+<script>
+
+  var csvFile = document.getElementById('file');
+
+  csvFile.addEventListener('change', function() {
+    var csvImportButton = document.getElementById('csvImport');
+    if(csvFile.value.endsWith('.csv')) {
+      csvImportButton.disabled = false;
+    } else {
+      csvImportButton.disabled = true;
+    }
+  }, false);
+
+</script>
+
 <% if params[:name].nil? || params[:name].empty? %>
   <h1>ユーザ一覧</h1>
 <% else %>
   <h1>検索結果</h1>
 <% end %>
 
-<div style="float:right;">
-  <%= form_with url: users_path, method: :get, local: true do |f| %>
-    <%= f.label "ユーザー名検索" , class: "search-label" %>
-    <div style="display: inline-flex;">
-      <%= f.text_field :name, :value => params[:name], placeholder: "キーワードを入力", class: "form-control search" %>
-      <%= f.submit "検索", class: "btn btn-primary search" %>
-    </div>
-  <% end %>
+<div style="height:15px;">
+  <div style="float:left; width:350px;">
+    <%= form_tag import_users_path, multipart: true do %>
+      <%= file_field_tag :file %>
+      <%= submit_tag "CSVをインポート", :id=>"csvImport" ,disabled: true, class: "btn btn-primary" %>
+    <% end %>
+  </div>
+  <div style="float:right;">
+    <%= form_with url: users_path, method: :get, local: true do |f| %>
+      <%= f.label "ユーザー名検索" , class: "search-label" %>
+      <div style="display: inline-flex;">
+        <%= f.text_field :name, :value => params[:name], placeholder: "キーワードを入力", class: "form-control search" %>
+        <%= f.submit "検索", class: "btn btn-primary search" %>
+      </div>
+    <% end %>
+  </div>
 </div>
 <div style="margin-bottom:100px;"></div>
 

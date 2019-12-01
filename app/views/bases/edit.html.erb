@@ -1,0 +1,16 @@
+<% provide(:title, '拠点編集') %>
+<% provide(:button_text, '拠点更新') %>
+
+<h1>拠点編集</h1>
+
+<div id="baseAdd" style="width:500px; margin:auto;">
+  <%= form_with url: basis_path(@base.id), method: :patch, local: true do |f| %>
+    <div class="baseAdd"><%= f.label "拠点番号", class: 'baseNo' %><%= @base.baseNo %></div>
+    <div class="baseAdd"><%= f.label "拠点名", class: 'baseName' %><%= f.text_field :baseName, value: @base.baseName, class: 'form-control', :style=>"width:300px;" %></div>
+    <div class="baseAdd">
+      <%= f.label "勤怠種類", class: 'attendanceKind' %>
+      <%= f.select :attendanceKind, options_for_select(["","出勤","退勤"], selected: @base.attendanceKind) %>
+    </div>
+    <div class="addBottun"><%= f.submit yield(:button_text), class: "btn btn-primary", :style=>"width:500px;" %></div>
+  <% end %>
+</div>

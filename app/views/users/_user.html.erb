@@ -1,7 +1,46 @@
 <li>
-  <%= link_to user.name, user %>
-  <% if current_user.admin? && !curent_user?(user) %>
-    ｜<%= link_to "基本情報編集", basic_info_path(user) %>
-    ｜<%= link_to "削除", user, method: :delete, data: { confirm: "削除してよろしいですか？" } %>
+  <% unless user.admin? %>
+    <%= user.name %>
+    <br>
+    ｜<%= link_to "削除", user, method: :delete, data: { confirm: "削除してよろしいですか？" }, class: "btn btn-primary" %>
+    <div style="background-color:#F9F9F9; height:100px; display: flex;">
+      <%= link_to "#edit#{user.id}", :data => {:toggle=>"collapse"}, :class=>"btn btn-primary",
+        :style=>"width: 100px; height: 50px; padding: 15px; margin-top: auto; margin-bottom: auto;" do %>編集<% end %>
+    </div>
+    <div class="collapse" id="edit<%= user.id %>" style="border:1px solid; border-color:#F9F9F9; padding:10px;">
+      <div class="card card-body">
+        <%= form_for user, url: user_path(user.id), method: :patch do |f| %>
+
+          <%= f.label "名前" %>
+          <%= f.text_field :name, class: 'form-control' %>
+
+          <%= f.label "メールアドレス" %>
+          <%= f.email_field :email, class: 'form-control' %>
+
+          <%= f.label "所属" %>
+          <%= f.text_field :affiliation, class: 'form-control' %>
+
+          <%= f.label "社員番号" %>
+          <%= f.text_field :employee_number, value: user.employee_number, class: 'form-control' %>
+
+          <%= f.label("カードID", "カードID") %>
+          <%= f.text_field :uid, value: user.uid, class: 'form-control' %>
+
+          <%= f.label "パスワード" %>
+          <%= f.password_field :password, class: 'form-control' %>
+
+          <%= f.label "基本勤務時間" %>
+          <%= f.time_field :basic_work_time, class: 'form-control' %>
+
+          <%= f.label "指定勤務開始時間" %>
+          <%= f.time_field :designated_work_start_time, class: 'form-control' %>
+
+          <%= f.label "指定勤務終了時間" %>
+          <%= f.time_field :designated_work_end_time, class: 'form-control' %>
+
+          <%= f.submit "編集する", class: "btn btn-primary" %>
+        <% end %>
+      </div>
+    </div>
   <% end %>
 </li>

@@ -10,5 +10,8 @@ Rails.application.routes.draw do
   patch 'users/:id/attendances/:date/update', to: 'attendances#update', as: :update_attendances
   resources :users do
     resources :attendances, only: :create
+    collection { post :import }
   end
+  get 'attend/users', to: 'users#working'
+  resources :bases
 end

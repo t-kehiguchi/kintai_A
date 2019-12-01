@@ -1,8 +1,9 @@
 class UsersController < ApplicationController
 
-  before_action :logged_in_user, only: [:index, :edit, :update]
-  before_action :correct_user,   only: [:edit, :update]
+  before_action :logged_in_user, only: [:index, :show, :edit, :update]
+  before_action :correct_user,   only: :edit
   before_action :admin_user,     only: [:destroy, :edit_basic_info, :update_basic_info]
+  before_action :admin_or_incorrect_user, only: :show
 
   def index
     unless current_user.admin?
@@ -19,12 +20,6 @@ class UsersController < ApplicationController
   end
 
   def show
-    unless current_user.admin?
-      unless current_user.id == params[:id].to_i
-        flash[:danger] = '一般ユーザはアクセスできません'
-        redirect_to root_url
-      end
-    end
     @user = User.find(params[:id])
     @first_day = first_day(params[:first_day])
     @last_day = @first_day.end_of_month
@@ -58,11 +53,11 @@ class UsersController < ApplicationController
   end
 
   def update
-    # @user = User.find(params[:id])
+    @user = User.find(params[:id])
     if @user.update_attributes(user_params)
       # 更新に成功した場合の処理
       flash[:success] = 'ユーザー情報を更新しました。'
-      redirect_to @user
+      redirect_to users_url
     else
       render 'edit'
     end
@@ -90,10 +85,20 @@ class UsersController < ApplicationController
     redirect_to @user
   end
 
+  def import
+    # fileはtmpに自動で一時保存される
+    User.import(params[:file])
+    redirect_to users_url
+  end
+
+  def working
+    @workingMembers = User.joins(:attendances).where("worked_on = ? and started_at is not null and finished_at is null", Date.today)
+  end
+
   private
 
     def user_params
-      params.require(:user).permit(:name, :email, :department, :password, :password_confirmation)
+      params.require(:user).permit(:name, :email, :affiliation, :password, :password_confirmation, :employee_number, :uid, :basic_work_time, :designated_work_start_time, :designated_work_end_time)
     end
     
     def basic_info_params
@@ -124,6 +129,13 @@ class UsersController < ApplicationController
      # 管理者かどうかを確認
     def admin_user
       redirect_to(root_url) if !current_user.admin?
+    end
+
+    def admin_or_incorrect_user
+      if current_user.admin? or ( current_user.id != params[:id].to_i )
+        flash[:danger] = "勤怠ページにはアクセスできません"
+        redirect_to root_url
+      end
     end
 
 end
