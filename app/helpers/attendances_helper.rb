@@ -62,4 +62,12 @@ module AttendancesHelper
     return Time.new(datetime.year, datetime.month, datetime.day, datetime.hour, minutes, datetime.sec)
   end
 
+  def getStatusList()
+    return ["なし","申請中","承認","否認"]
+  end
+
+  def getStatus(status)
+    return getStatusList()[status]
+  end
+
 end

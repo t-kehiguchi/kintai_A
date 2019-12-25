@@ -1,0 +1,30 @@
+<% provide(:title, '勤怠ログ') %>
+
+<h1>勤怠ログ</h1>
+
+<table class = "table-bordered table-striped table-condensed">
+  <thead>
+    <tr>
+      <th>日付</th>
+      <th>変更前出社時間</th>
+      <th>変更前退社時間</th>
+      <th>変更後出社</th>
+      <th>変更後退社</th>
+      <th>指示者</th>
+      <th>承認日</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @date.each do |date| %>
+      <tr>
+        <td><%= date %></td>
+        <td><%= @approved_data.select('*').where("date == ?", date).order("id ASC").last.before_started_at %></td>
+        <td><%= @approved_data.select('*').where("date == ?", date).order("id ASC").last.before_finished_at %></td>
+        <td><%= @approved_data.select('*').where("date == ?", date).order("id DESC").first.after_started_at %></td>
+        <td><%= @approved_data.select('*').where("date == ?", date).order("id DESC").first.after_finished_at %></td>
+        <td><%= getUser(@approved_data.select('*').where("date == ?", date).order("id DESC").first.approve_user_id).name %></td>
+        <td><%= @approved_data.select('*').where("date == ?", date).order("id DESC").first.approve_date %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

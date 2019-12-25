@@ -10,7 +10,16 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20191122030034) do
+ActiveRecord::Schema.define(version: 20191222060009) do
+
+  create_table "applies", force: :cascade do |t|
+    t.integer "month"
+    t.integer "apply_user_id"
+    t.integer "approve_user_id"
+    t.integer "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "attendances", force: :cascade do |t|
     t.date "worked_on"
@@ -20,6 +29,14 @@ ActiveRecord::Schema.define(version: 20191122030034) do
     t.integer "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "apply_finished_at"
+    t.string "overtime_reason"
+    t.integer "overtime_approve_user_id"
+    t.integer "approve_status"
+    t.string "attendance_change_started_at"
+    t.string "attendance_change_finished_at"
+    t.integer "attendance_change_approve_user_id"
+    t.integer "attendance_change_approve_status"
     t.index ["user_id"], name: "index_attendances_on_user_id"
   end
 
@@ -27,6 +44,21 @@ ActiveRecord::Schema.define(version: 20191122030034) do
     t.integer "baseNo"
     t.string "baseName"
     t.string "attendanceKind"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "changes", force: :cascade do |t|
+    t.integer "apply_user_id"
+    t.string "date"
+    t.string "before_started_at"
+    t.string "before_finished_at"
+    t.string "after_started_at"
+    t.string "after_finished_at"
+    t.string "note"
+    t.integer "status"
+    t.integer "approve_user_id"
+    t.string "approve_date"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -47,6 +79,9 @@ ActiveRecord::Schema.define(version: 20191122030034) do
     t.string "designated_work_start_time"
     t.string "designated_work_end_time"
     t.boolean "superior", default: false
+    t.integer "month_attendance_from_user_id"
+    t.integer "months"
+    t.integer "month_attendance_approve_status"
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 

@@ -1,0 +1,21 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  apply_user_id: 1
+  date: MyString
+  before_started_at: MyString
+  before_finished_at: MyString
+  after_started_at: MyString
+  after_finished_at: MyString
+  approve_user_id: 1
+  approve_date: MyString
+
+two:
+  apply_user_id: 1
+  date: MyString
+  before_started_at: MyString
+  before_finished_at: MyString
+  after_started_at: MyString
+  after_finished_at: MyString
+  approve_user_id: 1
+  approve_date: MyString

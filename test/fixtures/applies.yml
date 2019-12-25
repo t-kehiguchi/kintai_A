@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  month: 1
+  apply_user_id: 1
+  approve_user_id: 1
+  status: 1
+
+two:
+  month: 1
+  apply_user_id: 1
+  approve_user_id: 1
+  status: 1

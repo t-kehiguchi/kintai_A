@@ -1,37 +1,110 @@
 <% provide(:title, '勤怠表示') %>
+<script>
+  var A = function(date) {
+    document.getElementById('date').innerText = date;
+  }
+  var B = function(weekDay) {
+    var obj = document.getElementById('weekday');
+    obj.innerText = weekDay;
+    obj.classList = [];
+    if(obj.textContent == "土") {
+      obj.classList.add('saturday');
+    }else if(obj.textContent == "日") {
+      obj.classList.add('sunday');
+    }
+  }
+  var C = function(dateFull) {
+    document.getElementById('paramDate').value = dateFull;
+  }
+</script>
 <div>
   <table class = "table-bordered table-condensed">
     <tr>
       <td>
+        <% unless @designMode %>
         <%= link_to "←", user_path(params: {id: @user.id, first_day: @first_day.prev_month }),
                          class: "btn btn-xs btn-primary" %>
+        <% end %>
         &emsp;<%= @first_day.to_s(:year_month) %>　時間管理表&emsp;
+        <% unless @designMode %>
         <%= link_to "→", user_path(params: {id: @user.id, first_day: @first_day.next_month }),
                          class: "btn btn-xs btn-primary" %>
+        <% end %>
       </td>
-      <td>指定勤務時間　<%= format_basic_time(@user.work_time) %></td>
-      <td>基本時間　<%= format_basic_time(@user.basic_time) %></td>
-      <td>初日　<%= @first_day.to_s(:date) %></td>
+      <td>指定勤務開始時間　<%= @user.designated_work_start_time.blank? ? "0.00" : @user.designated_work_start_time %>
+        <br>
+          指定勤務終了時間　<%= @user.designated_work_end_time.blank? ? "0.00" : @user.designated_work_end_time %>
+      </td>
+      <td colspan="3" style="vertical-align:bottom;">基本時間　<%= format_basic_time(@user.basic_time) %></td>
+      <td style="vertical-align: bottom;">初日　<%= @first_day.to_s(:date) %></td>
     </tr>
     <tr>
-      <td>所属：<%= @user.affiliation.present? ? @user.affiliation : "未設定" %></td>
-      <td>氏名：<%= @user.name %></td>
-      <td>出勤日数：<%= @worked_sum %>日</td>
-      <td>締日　<%= @last_day.to_s(:date) %></td>
+      <td>所属　<%= @user.affiliation.present? ? @user.affiliation : "未設定" %></td>
+      <td>氏名　<%= @user.name %></td>
+      <td>コード</td>
+      <td><%= @user.employee_number %></td>
+      <td>出勤日数　<%= @worked_sum %>日</td>
+      <td>締め　<%= @last_day.to_s(:date) %></td>
     </tr>
   </table>
 
-  <%= link_to "勤怠を編集", edit_attendances_path(@user, @first_day), class: "btn btn-primary" %>
+  <% if current_user.superior? %>
+    <% unless @designMode %>
+      <div style="margin-top:15px; margin-bottom:10px;">
+        <div>
+          <% unless @month_request.empty? %>
+            <%= link_to "【 所属長承認申請のお知らせ 】#{@month_request.count}件の通知があります",
+              "#", data: {toggle: "modal", target: "#monthApproveFlame"}, :style=>"color:#B83338;" %>
+          <% else %>
+            <p style="color:#337ab7;margin:0px;">【 所属長承認申請のお知らせ 】</p>
+          <% end %>
+        </div>
+        <div>
+          <% unless @change_request.empty? %>
+            <%= link_to "【 勤怠変更申請のお知らせ 】#{@change_request.count}件の通知があります",
+              "#", data: {toggle: "modal", target: "#changeApproveFlame"}, :style=>"color:#B83338;" %>
+          <% else %>
+            <p style="color:#337ab7;margin:0px;">【 勤怠変更申請のお知らせ 】</p>
+          <% end %>
+        </div>
+        <div>
+          <% unless @overtime_request.empty? %>
+            <%= link_to "【 残業申請のお知らせ 】#{@overtime_request.count}件の通知があります",
+              "#", data: {toggle: "modal", target: "#zangyouApproveFlame"}, :style=>"color:#B83338;" %>
+          <% else %>
+            <p style="color:#337ab7;">【 残業申請のお知らせ 】</p>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+
+  <% unless @designMode %>
+    <div style="margin-top: 15px;">
+      <%= link_to "勤怠を編集", edit_attendances_path(@user, @first_day), class: "btn btn-primary" %>
+      <%= link_to "CSV出力", csv_export_path(@user, @first_day, format: :csv), class: "btn btn-primary" %>
+    </div>
+    <%= link_to "勤怠修正ログ（承認済）", attendance_log_path(@user), class: "btn btn-primary" %>
+  <% end %>
 
   <table class = "table-bordered table-striped table-condensed">
     <thead>
       <tr> <!--rowspan:縦結合、colspan：横結合-->
-        <th rowspan = "2">日付</th>
-        <th rowspan = "2">曜日</th>
+        <th rowspan = "3" style="width:100px; vertical-align:bottom;">残業申請</th>
+        <th rowspan = "3" style="vertical-align:bottom;">日付</th>
+        <th rowspan = "3" style="vertical-align:bottom;">曜日</th>
+        <th colspan = "8">【実績】</th>
+        <th colspan = "5">所定外勤務</th>
+      </tr>
+      <tr>
         <th colspan = "3">出社</th>
         <th colspan = "3">退社</th>
-        <th rowspan = "2">在社時間</th>
-        <th rowspan = "2">備考</th>
+        <th rowspan = "2" style="vertical-align:bottom;">在社時間</th>
+        <th rowspan = "2" style="vertical-align:bottom;">備考</th>
+        <th colspan = "2">終了予定時間</th>
+        <th rowspan = "2" style="vertical-align:bottom;">時間外時間</th>
+        <th rowspan = "2" style="vertical-align:bottom;">業務処理内容</th>
+        <th rowspan = "2" style="vertical-align:bottom;">指示者確認㊞</th>
       </tr>
       <tr>
         <th>時</th>
@@ -40,25 +113,41 @@
         <th>時</th>
         <th>分</th>
         <th></th>
+        <th>時</th>
+        <th>分</th>
       </tr>
     </thead>
     <tbody>
       <% @dates.each do |day| %>
         <tr>
+          <td>
+            <% unless @designMode %>
+              <button type="button" id="zangyou" class="btn btn-primary" data-toggle="modal" data-target="#flame"
+                onclick="
+                  A('<%= day.worked_on.to_s(:date) %>');
+                  B('<%= %w{日 月 火 水 木 金 土}[day.worked_on.wday] %>');
+                  C('<%= day.worked_on %>');"
+              >残業申請</button>
+            <% end %>
+          </td>
           <td><%= day.worked_on.to_s(:date) %></td>
           <td class="<%= weekDayColor(day.worked_on.wday) %>"><%= %w{日 月 火 水 木 金 土}[day.worked_on.wday] %></td>
           <td><%= day.started_at.to_s(:hour) if day.started_at.present? %></td>
           <td><%= round15Minites(day.started_at).min.to_s(:min) == '0' ? '00' : round15Minites(day.started_at).min.to_s(:min) if day.started_at.present? %></td>
           <td>
-            <% if day.worked_on == Date.today && day.started_at.nil? %>
-              <%= button_to "出社", user_attendances_path(@user), class: "btn btn-xs btn-primary" %>
+            <% unless @designMode %>
+              <% if day.worked_on == Date.today && day.started_at.nil? %>
+                <%= button_to "出社", user_attendances_path(@user), class: "btn btn-xs btn-primary" %>
+              <% end %>
             <% end %>
           </td>
           <td><%= day.finished_at.to_s(:hour) if day.finished_at.present? %></td>
           <td><%= round15Minites(day.finished_at).min.to_s(:min) == '0' ? '00' : round15Minites(day.finished_at).min.to_s(:min) if day.finished_at.present? %></td>
           <td>
-            <% if day.worked_on == Date.today && day.started_at.present? && day.finished_at.nil? %>
-              <%= button_to "退社", user_attendances_path(@user), class: "btn btn-xs btn-primary" %>
+            <% unless @designMode %>
+              <% if day.worked_on == Date.today && day.started_at.present? && day.finished_at.nil? %>
+                <%= button_to "退社", user_attendances_path(@user), class: "btn btn-xs btn-primary" %>
+              <% end %>
             <% end %>
           </td>
           <td>
@@ -69,16 +158,367 @@
             <% end %>
           </td>
           <td><%= day.note %></td>
+          <td>
+            <% if @overtime_approved_or_denied.find_by(worked_on: day.worked_on) %>
+              <%= Time.parse(@overtime_approved_or_denied.find_by(worked_on: day.worked_on).apply_finished_at).hour %>
+            <% end %>
+          </td>
+          <td>
+            <% if @overtime_approved_or_denied.find_by(worked_on: day.worked_on) %>
+              <%= Time.parse(@overtime_approved_or_denied.find_by(worked_on: day.worked_on).apply_finished_at).min %>
+            <% end %>
+          </td>
+          <td>
+            <% if @overtime_approved_or_denied.find_by(worked_on: day.worked_on) %>
+              <% if 0 <= Time.parse(overtimeRequestData.apply_finished_at).hour and
+                  Time.parse(overtimeRequestData.apply_finished_at).hour <= Time.parse(getUser(overtimeRequestData.user_id).designated_work_end_time).hour %>
+                <%= working_times(
+                  Time.parse(getUser(@overtime_approved_or_denied.find_by(worked_on: day.worked_on).user_id).designated_work_end_time),
+                  Time.parse(@overtime_approved_or_denied.find_by(worked_on: day.worked_on).apply_finished_at)+24*60*60)
+                %>
+              <% else %>
+                <%= working_times(
+                  Time.parse(getUser(@overtime_approved_or_denied.find_by(worked_on: day.worked_on).user_id).designated_work_end_time),
+                  Time.parse(@overtime_approved_or_denied.find_by(worked_on: day.worked_on).apply_finished_at))
+                %>
+              <% end %>
+            <% end %>
+          </td>
+          <td>
+            <% if @overtime_approved_or_denied.find_by(worked_on: day.worked_on) %>
+              <%= @overtime_approved_or_denied.find_by(worked_on: day.worked_on).overtime_reason %>
+            <% end %>
+          </td>
+          <td>
+            <% if Attendance.find_by(worked_on: day.worked_on, approve_status: 1, user_id: params[:id]) %>
+              <%= getUser(
+                Attendance.find_by(worked_on: day.worked_on, approve_status: 1, user_id: params[:id]).overtime_approve_user_id)
+                  .name.concat("に残業申請中")
+              %><br>
+            <% end %>
+            <% if Change.find_by(date: day.worked_on, status: 1, apply_user_id: params[:id]) %>
+              <%= getUser(
+                Change.find_by(date: day.worked_on, status: 1, apply_user_id: params[:id]).approve_user_id)
+                  .name.concat("に勤怠変更申請中")
+              %><br>
+            <% end %>
+            <% if @overtime_approved_or_denied.find_by(worked_on: day.worked_on) %>
+              <% if @overtime_approved_or_denied.find_by(worked_on: day.worked_on).approve_status == 2 %>
+                残業承認済
+              <% elsif @overtime_approved_or_denied.find_by(worked_on: day.worked_on).approve_status == 3 %>
+                残業否認
+              <% end %>
+              <br>
+            <% end %>
+          </td>
         </tr>
       <% end %>
     </tbody>
     <tfoot>
       <tr>
-        <td colspan = "2"><%= format_basic_time(@user.basic_time).to_f * @worked_sum %></td>
+        <td></td>
+        <td colspan = "2"></td>
         <td colspan = "6"></td>
         <td><%= working_times_sum(@total_seconds) unless @total_seconds.nil? %></td>
-        <td></td>
+        <td colspan = "5"></td>
+        <td>
+          所属長承認　
+          <% if @month_current_user_request %>
+            <% if @month_current_user_request.status == 2 or @month_current_user_request.status == 3 %>
+              <%= getUser(@month_current_user_request.approve_user_id).name.concat("から所属長").concat(getStatus(@month_current_user_request.status)).concat("済") %>
+            <% elsif @month_current_user_request.status == 1 %>
+              <%= getUser(@month_current_user_request.approve_user_id).name.concat("へ所属長承認").concat(getStatus(@month_current_user_request.status)) %>
+            <% else %>
+              末
+            <% end %>
+          <% else %>
+            末
+          <% end %>
+          <br>
+          <% unless @designMode %>
+            <%= form_with url: month_apply_path(@user, @first_day.month), local: true do |f| %>
+              <%= f.collection_select :jousi_id, @jousi, :id, :name, { include_blank: true, selected: "" }, class: 'form-control' %>
+              <%= f.submit "申請", class: "btn btn-primary" %>
+            <% end %>
+          <% end %>
+        </td>
       </tr>
     </tfoot>
   </table>
+
+  <div id="flame" class="modal fade" role="dialog" style="padding-right:0px;">
+  <!-- モーダルの適切な幅とマージンを設定 -->
+  <div class="modal-dialog" style="width:auto;">
+    <!-- モーダルコンテンツ:モーダルに表示させる内容-->
+    <div class="modal-content" style="width:750px; margin-left:auto; margin-right:auto;">
+      <!-- モーダルコンテンツのヘッダー部分-->
+      <!-- &timesは「×ボタン」の表示-->
+      <button type="button" class="close" data-dismiss="modal">&times;</button>
+      <div class="modal-header">
+        <h4 class="modal-title" style="text-align:center;">【残業申請】</h4>
+      </div>
+      <div class="modal-body">
+        <%= form_with url: zangyou_apply_path(@user), local: true do |f| %>
+          <input type="hidden" name="date" id="paramDate">
+          <table class = "table-bordered table-striped table-condensed">
+            <thead>
+              <tr>
+                <th>日付</th>
+                <th>曜日</th>
+                <th>終了予定時間</th>
+                <th>翌日</th>
+                <th>業務処理内容</th>
+                <th>指示者確認㊞</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td id="date"></td>
+                <td id="weekday"></td>
+                <td>
+                  <div>
+                    <%= f.select :finished_at_hour, (0..23).to_a.map { |v| "%02d" % v },
+                      { include_blank: true, selected: "" }, class: 'form-control', :style=>"width:75px; float:left;" %>
+                    <p style="float:left; margin-left:10px; font-size:20px;">:</p>
+                    <%= f.select :finished_at_minute, (0..59).to_a.map { |v| "%02d" % v },
+                      { include_blank: true, selected: "" }, class: 'form-control', :style=>"width:75px; float:left; margin-left:10px;" %>
+                  </div>
+                </td>
+                <td style="width:auto; margin-top:0px; margin-left:auto; margin-right:auto; height:13px;">
+                  <%= f.check_box :changed, :as => :boolean, checked:false, class: "form-control", :style=>"margin: 0px; height: 13px;" %>
+                </td>
+                <td><%= f.text_field :note, class: "form-control", :style=>"margin-bottom:0px;" %></td>
+                <td>
+                  <%= f.collection_select :jousi_id, @jousi, :id, :name, { include_blank: true, selected: "" }, class: 'form-control', :style=>"margin-bottom:0px;"%>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="modal-footer" style="text-align:center; padding: 0px; margin-top:10px;">
+            <%= f.submit "変更を送信する", class: "btn btn-primary", :style=>"width:718px;" %>
+          </div>
+          <% end %>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <div id="monthApproveFlame" class="modal fade" role="dialog" style="padding-right:0px;">
+  <!-- モーダルの適切な幅とマージンを設定 -->
+  <div class="modal-dialog" style="width:auto;">
+    <!-- モーダルコンテンツ:モーダルに表示させる内容-->
+    <div class="modal-content" style="width:1000px; margin-left:auto; margin-right:auto;">
+      <!-- モーダルコンテンツのヘッダー部分-->
+      <!-- &timesは「×ボタン」の表示-->
+      <button type="button" class="close" data-dismiss="modal">&times;</button>
+      <%= form_with url: month_approve_path, local: true do |f| %>
+        <% @month_request_uniq.each do |monthRequest| %>
+          <div class="modal-header">
+            <h4 class="modal-title" style="text-align:center;">【 <%= getUser(monthRequest).name %> からの1ヵ月分勤怠申請】</h4>
+          </div>
+          <div class="modal-body">
+            <table class = "table-bordered table-striped table-condensed">
+              <thead>
+                <tr>
+                  <td>月</td>
+                  <td>指示者確認㊞</td>
+                  <td>変更</td>
+                  <td>勤怠を確認する</td>
+                </tr>
+              </thead>
+              <tbody>
+                <% @month_request.where(apply_user_id: monthRequest).each do |monthRequestData| %>
+                  <%= fields_for "applies[]", monthRequestData do |af| %>
+                    <tr>
+                      <%= af.hidden_field :apply_from_user_id, value: monthRequestData.apply_user_id %>
+                      <%= af.hidden_field :month, value: monthRequestData.month %>
+                      <td><%= monthRequestData.month %>月</td>
+                      <td>
+                        <%= af.select :status, getStatusList().map.with_index  { |status, index| [status, index] },
+                          { include_blank: true, selected: monthRequestData.status }, class: 'form-control', :style=>"margin-bottom:0px;" %>
+                      </td>
+                      <td>
+                        <%= af.check_box :changed, :as => :boolean, checked:false, class: "form-control", :style=>"margin: 0px; height: 13px;" %>
+                      </td>
+                      <td>
+                        <%= link_to "確認", user_show_path(monthRequestData.apply_user_id, "designMode"), class: "btn btn-primary" %>
+                      </td>
+                    </tr>
+                  <% end %>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+        <div class="modal-footer" style="text-align:center;">
+          <%= f.submit "変更を送信する", class: "btn btn-primary", :style=>"width:968px;" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  </div>
+
+  <div id="zangyouApproveFlame" class="modal fade" role="dialog" style="padding-right:0px;">
+  <!-- モーダルの適切な幅とマージンを設定 -->
+  <div class="modal-dialog" style="width:auto;">
+    <!-- モーダルコンテンツ:モーダルに表示させる内容-->
+    <div class="modal-content" style="width:1000px; margin-left:auto; margin-right:auto;">
+      <!-- モーダルコンテンツのヘッダー部分-->
+      <!-- &timesは「×ボタン」の表示-->
+      <button type="button" class="close" data-dismiss="modal">&times;</button>
+      <%= form_with url: zangyou_approve_path, local: true do |f| %>
+        <% @overtime_request_uniq.each do |orvertimeRequest| %>
+          <div class="modal-header">
+            <h4 class="modal-title" style="text-align:center;">【 <%= getUser(orvertimeRequest).name %> からの残業申請】</h4>
+          </div>
+          <div class="modal-body">
+            <table class = "table-bordered table-striped table-condensed">
+              <thead>
+                <tr>
+                  <th>日付</th>
+                  <th>曜日</th>
+                  <th>終了予定時間</th>
+                  <th>指定勤務終了時間</th>
+                  <th>時間外時間</th>
+                  <th>業務処理内容</th>
+                  <th>指示者確認㊞</th>
+                  <th>変更</th>
+                  <th>勤怠を確認する</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @overtime_request.where(user_id: orvertimeRequest).each do |overtimeRequestData| %>
+                  <%= fields_for "zangyous[]", overtimeRequestData do |z| %>
+                    <tr>
+                      <%= z.hidden_field :apply_from_user_id, value: overtimeRequestData.user_id %>
+                      <%= z.hidden_field :date, value: overtimeRequestData.worked_on %>
+                      <td><%= overtimeRequestData.worked_on.to_s(:date) %></td>
+                      <td class="<%= weekDayColor(overtimeRequestData.worked_on.wday) %>"><%= %w{日 月 火 水 木 金 土}[overtimeRequestData.worked_on.wday] %></td>
+                      <td>
+                        <%= overtimeRequestData.apply_finished_at %>
+                      </td>
+                      <td><%= getUser(overtimeRequestData.user_id).designated_work_end_time %></td>
+                      <td>
+                        <% if 0 <= Time.parse(overtimeRequestData.apply_finished_at).hour and
+                              Time.parse(overtimeRequestData.apply_finished_at).hour <= Time.parse(getUser(overtimeRequestData.user_id).designated_work_end_time).hour %>
+                          <%= working_times(Time.parse(getUser(overtimeRequestData.user_id).designated_work_end_time),Time.parse(overtimeRequestData.apply_finished_at)+24*60*60) %>
+                        <% else %>
+                          <%= working_times(Time.parse(getUser(overtimeRequestData.user_id).designated_work_end_time),Time.parse(overtimeRequestData.apply_finished_at)) %>
+                        <% end %>
+                      </td>
+                      <td><%= overtimeRequestData.overtime_reason %></td>
+                      <td>
+                        <%= z.select :status, getStatusList().map.with_index  { |status, index| [status, index] },
+                          { include_blank: true, selected: overtimeRequestData.approve_status }, class: 'form-control', :style=>"margin-bottom:0px;" %>
+                      </td>
+                      <td>
+                        <%= z.check_box :changed, :as => :boolean, checked:false, class: "form-control", :style=>"margin: 0px; height: 13px;" %>
+                      </td>
+                      <td>
+                        <%= link_to "確認", user_show_path(overtimeRequestData.user_id, "designMode"), class: "btn btn-primary" %>
+                      </td>
+                    </tr>
+                  <% end %>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+        <div class="modal-footer" style="text-align:center;">
+          <%= f.submit "変更を送信する", class: "btn btn-primary", :style=>"width:200px;" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  </div>
+
+  <div id="changeApproveFlame" class="modal fade" role="dialog" style="padding-right:0px;">
+  <!-- モーダルの適切な幅とマージンを設定 -->
+  <div class="modal-dialog" style="width:auto;">
+    <!-- モーダルコンテンツ:モーダルに表示させる内容-->
+    <div class="modal-content" style="width:1000px; margin-left:auto; margin-right:auto;">
+      <!-- モーダルコンテンツのヘッダー部分-->
+      <!-- &timesは「×ボタン」の表示-->
+      <button type="button" class="close" data-dismiss="modal">&times;</button>
+      <%= form_with url: change_approve_path, local: true do |f| %>
+        <% @change_request_uniq.each do |changeRequest| %>
+          <div class="modal-header">
+            <h4 class="modal-title" style="text-align:center;">【 <%= getUser(changeRequest).name %> からの勤怠変更申請】</h4>
+          </div>
+          <div class="modal-body">
+            <table class = "table-bordered table-striped table-condensed">
+              <thead>
+                <tr>
+                  <th rowspan="3" style="vertical-align: bottom;">日付</th>
+                  <th rowspan="3" style="vertical-align: bottom;">曜日</th>
+                  <th colspan="4">変更前</th>
+                  <th colspan="4">変更後</th>
+                  <th rowspan="3" style="vertical-align: bottom;">備考</th>
+                  <th rowspan="3" style="vertical-align: bottom;">指示者確認㊞</th>
+                  <th rowspan="3" style="vertical-align: bottom;">変更</th>
+                  <th rowspan="3" style="vertical-align: bottom;">勤怠を確認する</th>
+                </tr>
+                <tr>
+                  <th colspan="2">出社</th>
+                  <th colspan="2">退社</th>
+                  <th colspan="2">出社</th>
+                  <th colspan="2">退社</th>
+                </tr>
+                <tr>
+                  <th>時</th>
+                  <th>分</th>
+                  <th>時</th>
+                  <th>分</th>
+                  <th>時</th>
+                  <th>分</th>
+                  <th>時</th>
+                  <th>分</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @change_request.where(apply_user_id: changeRequest).each do |changeRequestData| %>
+                  <%= fields_for "changes[]", changeRequestData do |c| %>
+                    <tr>
+                      <%= c.hidden_field :apply_from_user_id, value: changeRequestData.apply_user_id %>
+                      <%= c.hidden_field :date, value: changeRequestData.date %>
+                      <%= c.hidden_field :before_started_at, value: changeRequestData.before_started_at %>
+                      <%= c.hidden_field :before_finished_at, value: changeRequestData.before_finished_at %>
+                      <%= c.hidden_field :after_started_at, value: changeRequestData.after_started_at %>
+                      <%= c.hidden_field :after_finished_at, value: changeRequestData.after_finished_at %>
+                      <td><%= Date.parse(changeRequestData.date).to_s(:date) %></td>
+                      <td class="<%= weekDayColor(Date.parse(changeRequestData.date).wday) %>"><%= %w{日 月 火 水 木 金 土}[Date.parse(changeRequestData.date).wday] %></td>
+                      <td><%= changeRequestData.before_started_at.present? ? Time.parse(changeRequestData.date + " " + changeRequestData.before_started_at).hour : ""%></td>
+                      <td><%= changeRequestData.before_finished_at.present? ? Time.parse(changeRequestData.date + " " + changeRequestData.before_started_at).min : ""%></td>
+                      <td><%= changeRequestData.before_started_at.present? ? Time.parse(changeRequestData.date + " " + changeRequestData.before_finished_at).hour : ""%></td>
+                      <td><%= changeRequestData.before_finished_at.present? ? Time.parse(changeRequestData.date + " " + changeRequestData.before_finished_at).min : ""%></td>
+                      <td><%= Time.parse(changeRequestData.date + " " + changeRequestData.after_started_at).hour %></td>
+                      <td><%= Time.parse(changeRequestData.date + " " + changeRequestData.after_started_at).min %></td>
+                      <td><%= Time.parse(changeRequestData.date + " " + changeRequestData.after_finished_at).hour %></td>
+                      <td><%= Time.parse(changeRequestData.date + " " + changeRequestData.after_finished_at).min %></td>
+                      <td><%= changeRequestData.note %></td>
+                      <td>
+                        <%= c.select :status, getStatusList().map.with_index  { |status, index| [status, index] },
+                          { include_blank: true, selected: changeRequestData.status }, class: 'form-control', :style=>"margin-bottom:0px;" %>
+                      </td>
+                      <td>
+                        <%= c.check_box :changed, :as => :boolean, checked:false, class: "form-control", :style=>"margin: 0px; height: 13px;" %>
+                      </td>
+                      <td>
+                        <%= link_to "確認", user_show_path(changeRequestData.apply_user_id, "designMode"), class: "btn btn-primary" %>
+                      </td>
+                    </tr>
+                  <% end %>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+        <div class="modal-footer" style="text-align:center;">
+          <%= f.submit "変更を送信する", class: "btn btn-primary", :style=>"width:200px;" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  </div>
+
 </div>

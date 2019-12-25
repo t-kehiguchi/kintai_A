@@ -12,6 +12,15 @@ Rails.application.routes.draw do
     resources :attendances, only: :create
     collection { post :import }
   end
+  get    'users/:id/:designMode',  to: 'users#show', as: :user_show
+  post   'month/:id/:month/apply',  to: 'users#monthApply', as: :month_apply
+  post   'month/:id/approve',  to: 'users#monthApprove', as: :month_approve
+  post   'zangyou/:id/apply',  to: 'users#zangyouApply', as: :zangyou_apply
+  post   'zangyou/:id/approve',  to: 'users#zangyouApprove', as: :zangyou_approve
+  post   'change/:id/:date/apply',  to: 'attendances#changeApply', as: :change_apply
+  post   'change/:id/approve',  to: 'users#changeApprove', as: :change_approve
+  get    'user/:id/:date/export', to: 'users#export', as: :csv_export
   get 'attend/users', to: 'users#working'
+  get 'attendance/:id/log', to: 'attendance_log#index', as: :attendance_log
   resources :bases
 end
