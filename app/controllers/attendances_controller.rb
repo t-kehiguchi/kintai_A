@@ -28,7 +28,7 @@ class AttendancesController < ApplicationController
     @user = User.find(params[:id])
     @jousi = User.where(superior: true)
     if current_user.superior?
-      @jousi = User.where("superior == ? AND id <> ?", true, current_user.id)
+      @jousi = User.where("superior = ? AND id <> ?", true, current_user.id)
     end
     @first_day = first_day(params[:date])
     @last_day = @first_day.end_of_month
@@ -72,7 +72,7 @@ class AttendancesController < ApplicationController
           end
           # 最近の申請から同じ日に同じ時間(出社,退社とも)に申請していないか
           if Change.select('*')
-              .where("apply_user_id == ? AND date == ? AND after_started_at == ? AND after_finished_at == ?",
+              .where("apply_user_id = ? AND date = ? AND after_started_at = ? AND after_finished_at = ?",
                 params[:id], validation['date'], validation['started_at_hour'] + ":" + validation['started_at_minute'],
                   validation['finished_at_hour'] + ":" + validation['finished_at_minute']).order("id DESC").first
             flash[:danger] = '直近の申請に同じ出社時間と退社時間を申請しないでください。'
@@ -87,7 +87,7 @@ class AttendancesController < ApplicationController
       # もう一回ループ
       target.each do |apply|
         # 対象日付で初めて申請する場合
-        unless Change.where("apply_user_id == ? AND date == ?", params[:id], apply['date']).present?
+        unless Change.where("apply_user_id = ? AND date = ?", params[:id], apply['date']).present?
           # 変更申請テーブルを行追加(statusに1(申請中)で固定)
           row = Change.new(apply_user_id: params[:id], date: apply['date'], before_started_at: "", before_finished_at: "", 
                            after_started_at: apply['started_at_hour'] + ":" + apply['started_at_minute'],
@@ -95,7 +95,7 @@ class AttendancesController < ApplicationController
                            note: apply['note'], status: 1, approve_user_id: apply['jousi_id'], approve_date: "")
         else
           # 最後に申請したデータを取得し、そのデータをもとに行追加(statusに1(申請中)で固定)
-          latestData = Change.select("*").where("apply_user_id == ? AND date == ?", params[:id], apply['date']).order("id desc").first
+          latestData = Change.select("*").where("apply_user_id = ? AND date = ?", params[:id], apply['date']).order("id desc").first
           row = Change.new(apply_user_id: params[:id], date: apply['date'],
                            before_started_at: latestData.after_started_at, before_finished_at: latestData.after_finished_at,
                            after_started_at: apply['started_at_hour'] + ":" + apply['started_at_minute'],

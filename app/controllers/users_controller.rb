@@ -24,7 +24,7 @@ class UsersController < ApplicationController
       @designMode = true
     end
     @user = User.find(params[:id])
-    @jousi = User.where("superior == ? AND id <> ?", true, params[:id])
+    @jousi = User.where("superior = ? AND id <> ?", true, params[:id])
     @first_day = first_day(params[:first_day])
     @last_day = @first_day.end_of_month
     (@first_day..@last_day).each do |day|
@@ -36,11 +36,11 @@ class UsersController < ApplicationController
     @dates = user_attendances_month_date
     @worked_sum = @dates.where.not(started_at: nil).count
     # 残業申請、勤怠変更申請、月申請のそれぞれ上司に申請がきているか取得(statusの1は「申請中」)
-    @overtime_request = Attendance.where("overtime_approve_user_id == ? AND approve_status == ?", params[:id], 1)
+    @overtime_request = Attendance.where("overtime_approve_user_id = ? AND approve_status = ?", params[:id], 1)
     @overtime_request_uniq = @overtime_request.pluck(:user_id).uniq
-    @change_request = Change.where("approve_user_id == ? AND status == ?", params[:id], 1)
+    @change_request = Change.where("approve_user_id = ? AND status = ?", params[:id], 1)
     @change_request_uniq = @change_request.pluck(:apply_user_id).uniq
-    @month_request = Apply.where("status == ? AND approve_user_id == ?", 1, params[:id])
+    @month_request = Apply.where("status = ? AND approve_user_id = ?", 1, params[:id])
     @month_request_uniq = @month_request.pluck(:apply_user_id).uniq
     @month_current_user_request = Apply.find_by(month: Date.parse(@first_day.to_s).month, apply_user_id: params[:id])
     # 残業申請が承認 or 否認されているデータ(approve_statusは2,3)
@@ -108,7 +108,7 @@ class UsersController < ApplicationController
   def export
     @first_day = first_day(params[:first_day])
     @last_day = @first_day.end_of_month
-    @export_data = Attendance.where("worked_on BETWEEN ? AND ? AND user_id == ?", @first_day, @last_day, params[:id])
+    @export_data = Attendance.where("worked_on BETWEEN ? AND ? AND user_id = ?", @first_day, @last_day, params[:id])
     respond_to do |format|
       format.html
       format.csv do |csv|

@@ -18,12 +18,12 @@
     <% @date.each do |date| %>
       <tr>
         <td><%= date %></td>
-        <td><%= @approved_data.select('*').where("date == ?", date).order("id ASC").last.before_started_at %></td>
-        <td><%= @approved_data.select('*').where("date == ?", date).order("id ASC").last.before_finished_at %></td>
-        <td><%= @approved_data.select('*').where("date == ?", date).order("id DESC").first.after_started_at %></td>
-        <td><%= @approved_data.select('*').where("date == ?", date).order("id DESC").first.after_finished_at %></td>
-        <td><%= getUser(@approved_data.select('*').where("date == ?", date).order("id DESC").first.approve_user_id).name %></td>
-        <td><%= @approved_data.select('*').where("date == ?", date).order("id DESC").first.approve_date %></td>
+        <td><%= @approved_data.select('*').where("date = ?", date).order("id ASC").last.before_started_at %></td>
+        <td><%= @approved_data.select('*').where("date = ?", date).order("id ASC").last.before_finished_at %></td>
+        <td><%= @approved_data.select('*').where("date = ?", date).order("id DESC").first.after_started_at %></td>
+        <td><%= @approved_data.select('*').where("date = ?", date).order("id DESC").first.after_finished_at %></td>
+        <td><%= getUser(@approved_data.select('*').where("date = ?", date).order("id DESC").first.approve_user_id).name %></td>
+        <td><%= @approved_data.select('*').where("date = ?", date).order("id DESC").first.approve_date %></td>
       </tr>
     <% end %>
   </tbody>
