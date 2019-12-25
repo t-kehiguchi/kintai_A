@@ -106,7 +106,7 @@ class UsersController < ApplicationController
   end
 
   def export
-    @first_day = first_day(params[:first_day])
+    @first_day = first_day(params[:date])
     @last_day = @first_day.end_of_month
     @export_data = Attendance.where("worked_on BETWEEN ? AND ? AND user_id = ?", @first_day, @last_day, params[:id])
     respond_to do |format|
