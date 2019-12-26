@@ -61,7 +61,7 @@ class AttendancesController < ApplicationController
         if validation['started_at_hour'].present? and validation['started_at_minute'].present? and validation['finished_at_hour'].present? and validation['finished_at_minute'].present?
           # 24時以降で変更のチェックしているか(0 <= 終了時 <= 指定勤務開始時間が24時以降の定義)
           if (Time.parse("00:00") <= Time.parse(validation['finished_at_hour'].to_s + ":" + validation['finished_at_minute'].to_s) and
-                Time.parse(validation['finished_at_hour'].to_i + ":" + validation['finished_at_minute'].to_i) <= Time.parse(User.find(params[:id]).designated_work_start_time.to_i)) and
+                Time.parse(validation['finished_at_hour'].to_s + ":" + validation['finished_at_minute'].to_s) <= Time.parse(User.find(params[:id]).designated_work_start_time.to_s)) and
                   validation['changed'] == "0"
             flash[:danger] = '終了時間が0時以降の場合は翌日にチェックしてください。'
             redirect_to edit_attendances_url and return
