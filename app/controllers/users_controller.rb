@@ -108,7 +108,7 @@ class UsersController < ApplicationController
   def export
     @first_day = first_day(params[:date])
     @last_day = @first_day.end_of_month
-    @export_data = Attendance.where("worked_on BETWEEN ? AND ? AND user_id = ?", @first_day, @last_day, params[:id])
+    @export_data = Attendance.where("worked_on BETWEEN ? AND ? AND user_id = ?", @first_day, @last_day, params[:id]).order("worked_on ASC")
     respond_to do |format|
       format.html
       format.csv do |csv|
