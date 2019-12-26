@@ -170,8 +170,8 @@
           </td>
           <td>
             <% if @overtime_approved_or_denied.find_by(worked_on: day.worked_on) %>
-              <% if 0 <= Time.parse(@overtime_approved_or_denied.find_by(worked_on: day.worked_on).apply_finished_at).hour and
-                  Time.parse(@overtime_approved_or_denied.find_by(worked_on: day.worked_on).apply_finished_at).hour <= Time.parse(getUser(@overtime_approved_or_denied.find_by(worked_on: day.worked_on).user_id).designated_work_end_time).hour %>
+              <% if Time.parse("00:00") <= Time.parse(@overtime_approved_or_denied.find_by(worked_on: day.worked_on).apply_finished_at) and
+                  Time.parse(@overtime_approved_or_denied.find_by(worked_on: day.worked_on).apply_finished_at) <= Time.parse(getUser(@overtime_approved_or_denied.find_by(worked_on: day.worked_on).user_id).designated_work_end_time) %>
                 <%= working_times(
                   Time.parse(getUser(@overtime_approved_or_denied.find_by(worked_on: day.worked_on).user_id).designated_work_end_time),
                   Time.parse(@overtime_approved_or_denied.find_by(worked_on: day.worked_on).apply_finished_at)+24*60*60)
@@ -399,8 +399,8 @@
                       </td>
                       <td><%= getUser(overtimeRequestData.user_id).designated_work_end_time %></td>
                       <td>
-                        <% if 0 <= Time.parse(overtimeRequestData.apply_finished_at).hour and
-                              Time.parse(overtimeRequestData.apply_finished_at).hour <= Time.parse(getUser(overtimeRequestData.user_id).designated_work_end_time).hour %>
+                        <% if Time.parse("00:00") <= Time.parse(overtimeRequestData.apply_finished_at) and
+                              Time.parse(overtimeRequestData.apply_finished_at) <= Time.parse(getUser(overtimeRequestData.user_id).designated_work_end_time) %>
                           <%= working_times(Time.parse(getUser(overtimeRequestData.user_id).designated_work_end_time),Time.parse(overtimeRequestData.apply_finished_at)+24*60*60) %>
                         <% else %>
                           <%= working_times(Time.parse(getUser(overtimeRequestData.user_id).designated_work_end_time),Time.parse(overtimeRequestData.apply_finished_at)) %>

@@ -168,8 +168,13 @@ class UsersController < ApplicationController
       flash[:danger] = '終了時間を時間と分ともに選んでください。'
       redirect_to user_url and return
     # 24時以降で変更のチェックしているか(0 <= 終了時 <= 指定勤務開始時間が24時以降の定義)
-    elsif (0 <= params[:finished_at_hour].to_i and params[:finished_at_hour].to_i <= User.find(params[:id]).designated_work_start_time[0, User.find(params[:id]).designated_work_start_time.index(":")].to_i) and params[:changed] == "0"
+    elsif (Time.parse("00:00") <= Time.parse(params[:finished_at_hour].to_s + ":" + params[:finished_at_minute].to_s) and
+            Time.parse(params[:finished_at_hour].to_s + ":" + params[:finished_at_minute].to_s) <= Time.parse(User.find(params[:id]).designated_work_start_time)) and params[:changed] == "0"
       flash[:danger] = '終了時間が0時以降の場合は翌日にチェックしてください。'
+      redirect_to user_url and return
+    # そもそも出社時間なしで残業申請できない
+    elsif !(Attendance.find_by(worked_on: params[:date], user_id: params[:id]).started_at.present?)
+      flash[:danger] = '出社時間がある場合のみ残業申請できます。'
       redirect_to user_url and return
     end
     # 勤怠テーブルを更新(statusに1(申請中)で固定)
@@ -236,9 +241,9 @@ class UsersController < ApplicationController
         # さらにAttendanceテーブルにも更新
         attendance = Attendance.find_by(worked_on: change['date'], user_id: change['apply_from_user_id'])
         # 終了時間が0時以降(0 <= 終了時 <= 指定勤務開始時間)の場合
-        if 0 <= Time.parse(change['after_finished_at'].to_s).hour and
-            Time.parse(change['after_finished_at'].to_s).hour <=
-              Time.parse(User.find(change['apply_from_user_id']).designated_work_start_time.to_s).hour
+        if Time.parse("00:00") <= Time.parse(change['after_finished_at'].to_s) and
+            Time.parse(change['after_finished_at'].to_s) <=
+              Time.parse(User.find(change['apply_from_user_id']).designated_work_start_time.to_s)
           attendance.finished_at = Time.zone.parse(change['date'] + " " + row.after_finished_at.to_s).to_datetime + 1
         else
           attendance.finished_at = Time.zone.parse(change['date'] + " " + row.after_finished_at.to_s).to_datetime
