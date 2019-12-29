@@ -53,6 +53,9 @@ class UsersController < ApplicationController
 
   def create
     @user = User.new(user_params)
+    # デフォルト指摘勤務時間を設定
+    @user.designated_work_start_time = "9:00"
+    @user.designated_work_end_time = "18:00"
     if @user.save
       log_in(@user)
       flash[:success] = "ユーザーの新規作成に成功しました。"
